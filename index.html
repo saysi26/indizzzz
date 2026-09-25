@@ -137,7 +137,6 @@
   }
   input[type="text"]:focus, select:focus { border-color: var(--gold); }
   input[type="text"]::placeholder { color: var(--muted); }
-  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
 
   /* ── ROLE BADGE ── */
   .role-badge {
@@ -162,15 +161,8 @@
     align-items: center;
     margin-bottom: 24px;
   }
-  .score-player {
-    text-align: center;
-  }
-  .score-name {
-    font-size: 0.75rem;
-    color: var(--muted);
-    letter-spacing: 0.08em;
-    margin-bottom: 4px;
-  }
+  .score-player { text-align: center; }
+  .score-name { font-size: 0.75rem; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 4px; }
   .score-num {
     font-family: 'Fraunces', serif;
     font-size: 3rem;
@@ -178,11 +170,7 @@
     color: var(--gold);
     line-height: 1;
   }
-  .score-vs {
-    font-size: 0.85rem;
-    color: var(--border);
-    font-weight: 700;
-  }
+  .score-vs { font-size: 0.85rem; color: var(--border); font-weight: 700; }
 
   /* ── ROUND INDICATOR ── */
   .round-dots {
@@ -233,11 +221,7 @@
     color: var(--text);
     padding-top: 2px;
   }
-  .clue-locked {
-    color: var(--muted);
-    font-size: 0.8rem;
-    font-style: italic;
-  }
+  .clue-locked { color: var(--muted); font-size: 0.8rem; font-style: italic; }
 
   /* ── THEME BADGE ── */
   .theme-badge {
@@ -321,26 +305,13 @@
   }
   .code-big {
     font-family: 'Fraunces', serif;
-    font-size: 1.8rem;
+    font-size: 1.3rem;
     letter-spacing: 0.05em;
     color: var(--gold);
     user-select: all;
     word-break: break-all;
   }
   .code-hint { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
-
-  /* ── LOADING ── */
-  .loading-dots span {
-    display: inline-block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--gold);
-    margin: 0 3px;
-    animation: bounce 1.2s ease-in-out infinite;
-  }
-  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-10px); } }
 
   /* ── ALERT ── */
   .alert {
@@ -402,37 +373,6 @@
   /* ── SEPARATOR ── */
   .sep { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--border); font-size: 0.75rem; }
   .sep::before, .sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
-
-  /* ── HINT TIMER ── */
-  .timer-bar {
-    height: 4px;
-    background: var(--border);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-bottom: 12px;
-  }
-  .timer-fill {
-    height: 100%;
-    background: var(--gold);
-    border-radius: 999px;
-    transition: width 1s linear, background 1s;
-  }
-
-  .clue-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-
-  .clue-counter {
-    font-size: 0.78rem;
-    color: var(--muted);
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 4px 10px;
-  }
 
   /* ── FINAL SCREEN ── */
   .trophy {
@@ -506,14 +446,14 @@
       <div class="alert" id="home-alert"></div>
       
       <div style="display:flex;gap:10px;margin-top:4px">
-        <button class="btn btn-gold" style="flex:1" onclick="createRoom()">Crea nuova stanza</button>
+        <button class="btn btn-gold" style="flex:1" id="btn-create-room" onclick="createRoom()">Crea nuova stanza</button>
       </div>
 
       <div class="sep">oppure entra in una stanza</div>
 
       <div class="card-title">Codice stanza dell'altro giocatore</div>
       <input type="text" id="home-room" placeholder="Incolla il codice stanza" style="font-size:0.9rem">
-      <button class="btn btn-outline btn-full" onclick="joinRoom()">Entra in stanza</button>
+      <button class="btn btn-outline btn-full" id="btn-join-room" onclick="joinRoom()">Entra in stanza</button>
     </div>
   </div>
 
@@ -573,11 +513,6 @@
 
     <!-- Clues -->
     <div class="clue-reveal" id="clue-list"></div>
-
-    <!-- Timer bar (host only) -->
-    <div class="timer-bar" id="timer-bar" style="display:none">
-      <div class="timer-fill" id="timer-fill" style="width:100%"></div>
-    </div>
 
     <!-- Reveal next clue (host controls) -->
     <div id="host-controls" style="display:none;margin-bottom:12px">
@@ -652,7 +587,6 @@ const RELAY = 'https://jsonblob.com/api/jsonBlob';
 let myName = '';
 let roomCode = '';
 let isHost = false;
-let blobId = null;
 let pollInterval = null;
 let gameState = null;
 let myScore = 0;
@@ -798,7 +732,7 @@ function showAlert(id, msg) {
   const el = document.getElementById(id);
   el.textContent = msg;
   el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
+  setTimeout(() => el.classList.remove('show'), 4000);
 }
 
 function showScreen(id) {
@@ -814,7 +748,7 @@ function copyCode() {
   });
 }
 
-// ── JSONBLOB RELAY ────────────────────────────────────
+// ── JSONBLOB RELAY API ────────────────────────────────
 async function createBlob(data) {
   try {
     const r = await fetch(RELAY, {
@@ -822,6 +756,7 @@ async function createBlob(data) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
+    if (!r.ok) return null;
     const loc = r.headers.get('Location') || '';
     return loc.split('/').pop();
   } catch(e) { return null; }
@@ -845,22 +780,16 @@ async function writeBlob(id, data) {
   } catch(e) {}
 }
 
-// ── ROOM INIT ─────────────────────────────────────────
-function getNameAndRoom(requireRoom = true) {
-  myName = document.getElementById('home-name').value.trim();
-  if(!myName) { showAlert('home-alert','Inserisci il tuo nome!'); return false; }
-  
-  if (requireRoom) {
-    roomCode = document.getElementById('home-room').value.trim();
-    if(!roomCode) { showAlert('home-alert','Inserisci un codice stanza!'); return false; }
-  }
-  return true;
-}
-
+// ── ROOM ACTIONS ──────────────────────────────────────
 async function createRoom() {
-  if(!getNameAndRoom(false)) return;
-  isHost = true;
+  myName = document.getElementById('home-name').value.trim();
+  if(!myName) { showAlert('home-alert','Inserisci il tuo nome!'); return; }
 
+  const btn = document.getElementById('btn-create-room');
+  btn.disabled = true;
+  btn.textContent = 'Creazione stanza...';
+
+  isHost = true;
   rounds = buildRounds();
 
   const initState = {
@@ -878,35 +807,45 @@ async function createRoom() {
   };
   initState.scores[myName] = 0;
 
-  blobId = await createBlob(initState);
-  if(!blobId) {
-    blobId = 'LOCAL_' + Math.random().toString(36).substring(2, 8);
-    localStorage.setItem('room_'+blobId, JSON.stringify(initState));
-  }
-  
-  roomCode = blobId;
-  localStorage.setItem('blobId_'+roomCode, blobId);
+  const generatedId = await createBlob(initState);
+  btn.disabled = false;
+  btn.textContent = 'Crea nuova stanza';
 
+  if(!generatedId) {
+    showAlert('home-alert', 'Errore di connessione al server. Riprova!');
+    return;
+  }
+
+  roomCode = generatedId;
   gameState = initState;
   showLobby();
 }
 
 async function joinRoom() {
-  if(!getNameAndRoom(true)) return;
+  myName = document.getElementById('home-name').value.trim();
+  if(!myName) { showAlert('home-alert','Inserisci il tuo nome!'); return; }
+
+  roomCode = document.getElementById('home-room').value.trim();
+  if(!roomCode) { showAlert('home-alert','Inserisci il codice della stanza!'); return; }
+
+  const btn = document.getElementById('btn-join-room');
+  btn.disabled = true;
+  btn.textContent = 'Verifica codice...';
+
   isHost = false;
+  let state = await readBlob(roomCode);
 
-  blobId = localStorage.getItem('blobId_'+roomCode) || roomCode;
+  btn.disabled = false;
+  btn.textContent = 'Entra in stanza';
 
-  let state = blobId.startsWith('LOCAL_')
-    ? JSON.parse(localStorage.getItem('room_'+roomCode)||'null')
-    : await readBlob(blobId);
-
-  if(!state) { showAlert('home-alert','Stanza non trovata. Controlla il codice!'); return; }
+  if(!state) { 
+    showAlert('home-alert','Stanza non trovata. Verifica che il codice sia corretto!'); 
+    return; 
+  }
 
   state.guest = myName;
   if(!state.scores) state.scores = {};
   state.scores[myName] = 0;
-  state.ts = Date.now();
 
   rounds = state.rounds;
   oppName = state.host;
@@ -918,11 +857,7 @@ async function joinRoom() {
 
 async function saveState(state) {
   state.ts = Date.now();
-  if(blobId && blobId.startsWith('LOCAL_')) {
-    localStorage.setItem('room_'+roomCode, JSON.stringify(state));
-  } else {
-    await writeBlob(blobId, state);
-  }
+  await writeBlob(roomCode, state);
   gameState = state;
 }
 
@@ -938,9 +873,8 @@ function showLobby() {
 function startPolling() {
   if(pollInterval) clearInterval(pollInterval);
   pollInterval = setInterval(async () => {
-    let state = blobId && blobId.startsWith('LOCAL_')
-      ? JSON.parse(localStorage.getItem('room_'+roomCode)||'null')
-      : await readBlob(blobId);
+    if (!roomCode) return;
+    let state = await readBlob(roomCode);
     if(!state) return;
 
     if(gameState && state.ts === gameState.ts) return;
@@ -957,8 +891,7 @@ function startPolling() {
 function handleLobbyPoll(state) {
   if(state.host && state.guest) {
     oppName = isHost ? state.guest : state.host;
-    const readyDiv = document.getElementById('lobby-both-ready');
-    readyDiv.style.display = 'block';
+    document.getElementById('lobby-both-ready').style.display = 'block';
     document.getElementById('lobby-status').style.display = 'none';
     if(isHost) {
       document.getElementById('lobby-start-btn').style.display = 'flex';
@@ -1025,7 +958,6 @@ function initGameUI() {
   }
 
   document.getElementById('host-controls').style.display = isHost ? 'block' : 'none';
-  document.getElementById('timer-bar').style.display = isHost ? 'block' : 'none';
 }
 
 function syncGameUI(state) {
@@ -1317,9 +1249,7 @@ async function sendPenitenza() {
 
 function pollForPenitenza() {
   const pInterval = setInterval(async () => {
-    let state = blobId && blobId.startsWith('LOCAL_')
-      ? JSON.parse(localStorage.getItem('room_'+roomCode)||'null')
-      : await readBlob(blobId);
+    let state = await readBlob(roomCode);
     if(state && state.penitenza) {
       clearInterval(pInterval);
       const box = document.getElementById('loser-forfeit-content');
@@ -1381,14 +1311,6 @@ function spawnConfetti() {
     }, i * 40);
   }
 }
-
-// ── CHECK URL HASH FOR ROOM CODE ──────────────────────
-(function checkHash() {
-  const hash = location.hash.replace('#','');
-  if(hash && hash.length >= 4) {
-    document.getElementById('home-room').value = hash;
-  }
-})();
 </script>
 </body>
 </html>
