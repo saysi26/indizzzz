@@ -321,10 +321,11 @@
   }
   .code-big {
     font-family: 'Fraunces', serif;
-    font-size: 3rem;
-    letter-spacing: 0.15em;
+    font-size: 1.8rem;
+    letter-spacing: 0.05em;
     color: var(--gold);
     user-select: all;
+    word-break: break-all;
   }
   .code-hint { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
 
@@ -502,13 +503,17 @@
       <div class="card-title">Il tuo nome</div>
       <input type="text" id="home-name" placeholder="Come ti chiami?" maxlength="20">
 
-      <div class="card-title" style="margin-top:4px">Codice stanza</div>
       <div class="alert" id="home-alert"></div>
-      <input type="text" id="home-room" placeholder="Es: DOGS42" maxlength="8" style="text-transform:uppercase;letter-spacing:0.1em;font-size:1.1rem">
+      
       <div style="display:flex;gap:10px;margin-top:4px">
-        <button class="btn btn-gold" style="flex:1" onclick="joinRoom()">Entra in stanza</button>
-        <button class="btn btn-outline" onclick="createRoom()">Crea stanza</button>
+        <button class="btn btn-gold" style="flex:1" onclick="createRoom()">Crea nuova stanza</button>
       </div>
+
+      <div class="sep">oppure entra in una stanza</div>
+
+      <div class="card-title">Codice stanza dell'altro giocatore</div>
+      <input type="text" id="home-room" placeholder="Incolla il codice stanza" style="font-size:0.9rem">
+      <button class="btn btn-outline btn-full" onclick="joinRoom()">Entra in stanza</button>
     </div>
   </div>
 
@@ -641,52 +646,22 @@
 </div><!-- /wrap -->
 
 <script>
-// ═══════════════════════════════════════════════════════
-//  STORAGE-BASED MULTIPLAYER (via localStorage polling)
-//  Works on same-network / same-device only, OR via
-//  a shared tiny JSON on GitHub Gist (we use localStorage
-//  with BroadcastChannel for same-device demo,
-//  but the real magic: we encode state in the URL hash
-//  so two people on different phones/PCs can play via
-//  a shared room code + localStorage sync polled)
-//
-//  ARCHITECTURE: We use a lightweight sync via
-//  window.storage (localStorage) keyed by room code.
-//  Two browsers on different devices won't share
-//  localStorage — so we use a free public key-value
-//  trick: encode messages as URL fragments and relay
-//  via a polling mechanism on a shared key stored in
-//  sessionStorage. For TRUE cross-device play we use
-//  the Anthropic API as a relay: we call it to store
-//  state (embedded in a long-running "game session"
-//  prompt) — but actually the cleanest GitHub Pages
-//  approach is: use a free JSONBin.io or similar.
-//
-//  For THIS build: we use localStorage + BroadcastChannel
-//  (works perfectly for same-device / same-browser
-//  split-screen, which IS the fun way), PLUS a URL-share
-//  mechanism that encodes the room in the hash so the
-//  other player can join. State sync across devices
-//  uses a tiny public API relay (jsonblob.com).
-// ═══════════════════════════════════════════════════════
-
 const RELAY = 'https://jsonblob.com/api/jsonBlob';
 
 // ── GAME STATE ────────────────────────────────────────
 let myName = '';
 let roomCode = '';
 let isHost = false;
-let blobId = null; // jsonblob ID for this room
+let blobId = null;
 let pollInterval = null;
-let gameState = null; // mirrored from server
+let gameState = null;
 let myScore = 0;
 let oppScore = 0;
 let currentRound = 0;
 let totalRounds = 5;
 let currentClueIndex = 0;
 let hasAnswered = false;
-let rounds = []; // [{theme, emoji, answer, clues:[5]}]
-let timerInterval = null;
+let rounds = [];
 let selectedPenitenza = null;
 let oppName = '';
 
@@ -704,7 +679,7 @@ const PENITENZE = [
   "📞 Devi farmi una telefonata di 5 minuti parlando SOLO in rima",
 ];
 
-// ── ROUND DATA (built-in, no AI needed) ──────────────
+// ── ROUND DATA ────────────────────────────────────────
 const ROUND_POOL = [
   {
     theme: 'bassotti', label: 'Bassotti', emoji: '🐶', themeClass: 'theme-dachshund',
@@ -819,13 +794,6 @@ const ROUND_POOL = [
 ];
 
 // ── UTILITY ───────────────────────────────────────────
-function randCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let r = '';
-  for(let i=0;i<6;i++) r += chars[Math.floor(Math.random()*chars.length)];
-  return r;
-}
-
 function showAlert(id, msg) {
   const el = document.getElementById(id);
   el.textContent = msg;
@@ -878,25 +846,27 @@ async function writeBlob(id, data) {
 }
 
 // ── ROOM INIT ─────────────────────────────────────────
-function getNameAndRoom() {
+function getNameAndRoom(requireRoom = true) {
   myName = document.getElementById('home-name').value.trim();
-  roomCode = document.getElementById('home-room').value.trim().toUpperCase();
   if(!myName) { showAlert('home-alert','Inserisci il tuo nome!'); return false; }
-  if(!roomCode) { showAlert('home-alert','Inserisci un codice stanza!'); return false; }
+  
+  if (requireRoom) {
+    roomCode = document.getElementById('home-room').value.trim();
+    if(!roomCode) { showAlert('home-alert','Inserisci un codice stanza!'); return false; }
+  }
   return true;
 }
 
 async function createRoom() {
-  if(!getNameAndRoom()) return;
+  if(!getNameAndRoom(false)) return;
   isHost = true;
 
-  // Build rounds
   rounds = buildRounds();
 
   const initState = {
     host: myName,
     guest: null,
-    status: 'lobby', // lobby | playing | round_result | final
+    status: 'lobby',
     round: 0,
     clueIndex: 0,
     scores: {},
@@ -910,28 +880,22 @@ async function createRoom() {
 
   blobId = await createBlob(initState);
   if(!blobId) {
-    // Fallback: localStorage only (same device)
-    blobId = 'LOCAL_' + roomCode;
-    localStorage.setItem('room_'+roomCode, JSON.stringify(initState));
-    localStorage.setItem('blobId_'+roomCode, blobId);
-  } else {
-    localStorage.setItem('blobId_'+roomCode, blobId);
+    blobId = 'LOCAL_' + Math.random().toString(36).substring(2, 8);
+    localStorage.setItem('room_'+blobId, JSON.stringify(initState));
   }
+  
+  roomCode = blobId;
+  localStorage.setItem('blobId_'+roomCode, blobId);
 
   gameState = initState;
   showLobby();
 }
 
 async function joinRoom() {
-  if(!getNameAndRoom()) return;
+  if(!getNameAndRoom(true)) return;
   isHost = false;
 
-  // Try to find blob
-  blobId = localStorage.getItem('blobId_'+roomCode);
-  if(!blobId) {
-    showAlert('home-alert', 'Stanza non trovata. Controlla il codice!');
-    return;
-  }
+  blobId = localStorage.getItem('blobId_'+roomCode) || roomCode;
 
   let state = blobId.startsWith('LOCAL_')
     ? JSON.parse(localStorage.getItem('room_'+roomCode)||'null')
@@ -979,7 +943,6 @@ function startPolling() {
       : await readBlob(blobId);
     if(!state) return;
 
-    // Don't re-process if same timestamp
     if(gameState && state.ts === gameState.ts) return;
     gameState = state;
     rounds = state.rounds;
@@ -1018,7 +981,6 @@ function handleGamePoll(state) {
   if(document.getElementById('screen-game').classList.contains('active')) {
     syncGameUI(state);
   } else {
-    // Transition to game screen
     currentRound = state.round;
     currentClueIndex = state.clueIndex;
     hasAnswered = false;
@@ -1032,7 +994,6 @@ function handleGamePoll(state) {
 
 // ── GAME INIT ─────────────────────────────────────────
 function buildRounds() {
-  // Pick 5 rounds: 1 bassotto, 1 girasole, 1 boxe, 2 mix
   const bassotti = ROUND_POOL.filter(r=>r.theme==='bassotti');
   const girasoli = ROUND_POOL.filter(r=>r.theme==='girasoli');
   const boxe     = ROUND_POOL.filter(r=>r.theme==='boxe');
@@ -1043,7 +1004,7 @@ function buildRounds() {
     pick(bassotti), pick(girasoli), pick(boxe),
     pick(mix), pick(mix.filter(r=>r.answer!==pick(mix).answer)||mix)
   ];
-  // Shuffle
+  
   for(let i=picked.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
     [picked[i],picked[j]]=[picked[j],picked[i]];
@@ -1052,10 +1013,9 @@ function buildRounds() {
 }
 
 function initGameUI() {
-  // Names
   document.getElementById('score-name-me').textContent = myName;
   document.getElementById('score-name-opp').textContent = oppName;
-  // Round dots
+
   const dotsEl = document.getElementById('round-dots');
   dotsEl.innerHTML = '';
   for(let i=0;i<totalRounds;i++){
@@ -1063,7 +1023,7 @@ function initGameUI() {
     d.className = 'round-dot' + (i===currentRound?' current':'');
     dotsEl.appendChild(d);
   }
-  // Host controls
+
   document.getElementById('host-controls').style.display = isHost ? 'block' : 'none';
   document.getElementById('timer-bar').style.display = isHost ? 'block' : 'none';
 }
@@ -1074,15 +1034,12 @@ function syncGameUI(state) {
   myScore = state.scores[myName] || 0;
   oppScore = state.scores[oppName] || 0;
 
-  // Scores
   document.getElementById('score-me').textContent = myScore;
   document.getElementById('score-opp').textContent = oppScore;
 
-  // Progress
   const pct = (currentRound / totalRounds) * 100;
   document.getElementById('progress-fill').style.width = pct + '%';
 
-  // Round dots
   const dots = document.querySelectorAll('.round-dot');
   dots.forEach((d, i) => {
     d.className = 'round-dot';
@@ -1090,7 +1047,6 @@ function syncGameUI(state) {
     else if(i === currentRound) d.classList.add('current');
   });
 
-  // Theme badge
   const round = rounds[currentRound];
   if(round) {
     const badge = document.getElementById('theme-badge');
@@ -1098,10 +1054,8 @@ function syncGameUI(state) {
     badge.innerHTML = round.emoji + ' ' + round.label;
   }
 
-  // Clues
   renderClues(state);
 
-  // Next clue button
   const btnNext = document.getElementById('btn-next-clue');
   if(btnNext) {
     const atMax = currentClueIndex >= 4;
@@ -1109,7 +1063,6 @@ function syncGameUI(state) {
     btnNext.textContent = atMax ? 'Tutti gli indizi mostrati' : `Mostra prossimo indizio 🔍`;
   }
 
-  // Answer zone
   const roundResult = document.getElementById('round-result');
   const answerZone = document.getElementById('answer-zone');
   const hostNext = document.getElementById('host-next-round');
@@ -1149,7 +1102,6 @@ function renderClues(state) {
     item.appendChild(txt);
     list.appendChild(item);
 
-    // Trigger animation
     if(i <= state.clueIndex) {
       setTimeout(() => item.classList.add('visible'), i * 80);
     }
@@ -1187,7 +1139,6 @@ async function submitAnswer() {
     document.getElementById('answer-feedback').innerHTML =
       `<span style="color:var(--green)">✓ Corretto! +${points} punti con ${cluesUsed} indizi</span>`;
 
-    // Update state
     let state = gameState;
     if(!state.scores) state.scores = {};
     state.scores[myName] = (state.scores[myName] || 0) + points;
@@ -1207,7 +1158,6 @@ async function submitAnswer() {
 }
 
 function checkAnswer(input, correct) {
-  // Normalize
   const norm = s => s.toLowerCase().trim()
     .replace(/[àá]/g,'a').replace(/[èé]/g,'e')
     .replace(/[ìí]/g,'i').replace(/[òó]/g,'o')
@@ -1215,9 +1165,7 @@ function checkAnswer(input, correct) {
   const ni = norm(input);
   const nc = norm(correct);
   if(ni === nc) return true;
-  // Contains
   if(ni.includes(nc) || nc.includes(ni)) return true;
-  // Levenshtein for small words
   if(nc.length <= 6) return ni === nc;
   return levenshtein(ni, nc) <= 2;
 }
@@ -1334,7 +1282,7 @@ function showFinal(state) {
     document.getElementById('final-winner').textContent = myName + ' vince!';
     document.getElementById('final-sub').textContent = 'Puoi scegliere la penitenza 😈';
     spawnConfetti();
-    // Show penitenza chooser
+
     document.getElementById('forfeit-section').style.display = 'block';
     const list = document.getElementById('penitenza-list');
     list.innerHTML = '';
@@ -1386,7 +1334,6 @@ function pollForPenitenza() {
 
 async function restartGame() {
   clearInterval(pollInterval);
-  // Reset blob
   const newRounds = buildRounds();
   let state = {
     host: isHost ? myName : gameState.host,
@@ -1439,7 +1386,7 @@ function spawnConfetti() {
 (function checkHash() {
   const hash = location.hash.replace('#','');
   if(hash && hash.length >= 4) {
-    document.getElementById('home-room').value = hash.toUpperCase();
+    document.getElementById('home-room').value = hash;
   }
 })();
 </script>
