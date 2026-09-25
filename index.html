@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Deep VS 🤍 — La Sfida degli Indizi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700;800&family=Fraunces:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #161616;
+    --surface2: #1e1e1e;
+    --border: #2a2a2a;
+    --gold: #f0c040;
+    --gold2: #ffd96b;
+    --red: #e84040;
+    --green: #3ddc97;
+    --blue: #5b9cf6;
+    --text: #f0ede8;
+    --muted: #7a7775;
+    --dachshund: #c97b38;
+    --sunflower: #f5c518;
+    --boxing: #e84040;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-sizing: border-box;
+  }
+
+  *, *::before, *::after { box-sizing: inherit; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; width: 100%; max-width: 680px; padding: 24px 16px 60px; }
+
+  /* ── HEADER ── */
+  header {
+    text-align: center;
+    padding: 32px 0 20px;
+  }
+  .logo-emoji { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.9rem, 6vw, 2.8rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 60%, #fff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .subtitle {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── SCREENS ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.15s;
+    user-select: none;
+    letter-spacing: 0.01em;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-gold { background: var(--gold); color: #0d0d0d; }
+  .btn-gold:hover:not(:disabled) { background: var(--gold2); }
+  .btn-outline { background: transparent; color: var(--text); border: 1.5px solid var(--border); }
+  .btn-outline:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+  .btn-full { width: 100%; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-green { background: var(--green); color: #0d0d0d; }
+
+  /* ── INPUTS ── */
+  input[type="text"], select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.15s;
+    margin-bottom: 12px;
+  }
+  input[type="text"]:focus, select:focus { border-color: var(--gold); }
+  input[type="text"]::placeholder { color: var(--muted); }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+
+  /* ── ROLE BADGE ── */
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .role-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+
+  /* ── SCOREBOARD ── */
+  .scoreboard {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+  .score-player {
+    text-align: center;
+  }
+  .score-name {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .score-num {
+    font-family: 'Fraunces', serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .score-vs {
+    font-size: 0.85rem;
+    color: var(--border);
+    font-weight: 700;
+  }
+
+  /* ── ROUND INDICATOR ── */
+  .round-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  .round-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.2s, transform 0.2s;
+  }
+  .round-dot.done { background: var(--gold); }
+  .round-dot.current { background: var(--gold2); transform: scale(1.3); }
+
+  /* ── CLUE AREA ── */
+  .clue-reveal {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .clue-item {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.35s, transform 0.35s;
+  }
+  .clue-item.visible { opacity: 1; transform: translateY(0); }
+  .clue-item:last-child { border-bottom: none; }
+  .clue-num {
+    font-family: 'Fraunces', serif;
+    font-size: 1.4rem;
+    color: var(--gold);
+    min-width: 28px;
+    line-height: 1.2;
+  }
+  .clue-text {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text);
+    padding-top: 2px;
+  }
+  .clue-locked {
+    color: var(--muted);
+    font-size: 0.8rem;
+    font-style: italic;
+  }
+
+  /* ── THEME BADGE ── */
+  .theme-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 16px;
+  }
+  .theme-dachshund { background: rgba(201,123,56,0.18); color: var(--dachshund); border: 1px solid rgba(201,123,56,0.3); }
+  .theme-sunflower { background: rgba(245,197,24,0.15); color: var(--sunflower); border: 1px solid rgba(245,197,24,0.25); }
+  .theme-boxing { background: rgba(232,64,64,0.15); color: var(--boxing); border: 1px solid rgba(232,64,64,0.25); }
+  .theme-mix { background: rgba(91,156,246,0.15); color: var(--blue); border: 1px solid rgba(91,156,246,0.25); }
+
+  /* ── ANSWER ZONE ── */
+  .answer-zone { margin-top: 20px; }
+  .answer-input-row { display: flex; gap: 10px; }
+  .answer-input-row input { flex: 1; margin-bottom: 0; }
+
+  /* ── WAITING PULSE ── */
+  .waiting {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .pulse-ring {
+    display: inline-block;
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 3px solid var(--gold);
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+    margin-bottom: 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── RESULT FLASH ── */
+  .result-flash {
+    text-align: center;
+    padding: 28px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    animation: popIn 0.3s ease;
+  }
+  .result-flash.win { background: rgba(61,220,151,0.12); border: 1.5px solid var(--green); }
+  .result-flash.lose { background: rgba(232,64,64,0.1); border: 1.5px solid rgba(232,64,64,0.4); }
+  .result-flash.draw { background: rgba(240,192,64,0.1); border: 1.5px solid rgba(240,192,64,0.3); }
+  .result-flash .big { font-family: 'Fraunces', serif; font-size: 2.2rem; margin-bottom: 4px; }
+  .result-flash .sub { font-size: 0.9rem; color: var(--muted); }
+  @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ── FORFEIT ── */
+  .forfeit-box {
+    background: var(--surface2);
+    border: 1.5px solid var(--red);
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .forfeit-emoji { font-size: 3rem; display: block; margin-bottom: 8px; }
+  .forfeit-title {
+    font-family: 'Fraunces', serif;
+    font-size: 1.4rem;
+    color: var(--red);
+    margin-bottom: 8px;
+  }
+  .forfeit-text { color: var(--text); font-size: 1rem; line-height: 1.5; }
+
+  /* ── CODE DISPLAY ── */
+  .code-display {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    margin: 16px 0;
+  }
+  .code-big {
+    font-family: 'Fraunces', serif;
+    font-size: 3rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    user-select: all;
+  }
+  .code-hint { font-size: 0.75rem; color: var(--muted); margin-top: 6px; }
+
+  /* ── LOADING ── */
+  .loading-dots span {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin: 0 3px;
+    animation: bounce 1.2s ease-in-out infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-10px); } }
+
+  /* ── ALERT ── */
+  .alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    margin-bottom: 14px;
+    background: rgba(240,192,64,0.1);
+    border: 1px solid rgba(240,192,64,0.25);
+    color: var(--gold2);
+    display: none;
+  }
+  .alert.show { display: block; }
+
+  /* ── PENITENZE ── */
+  .penitenza-option {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  .penitenza-option:hover { border-color: var(--gold); background: rgba(240,192,64,0.05); }
+  .penitenza-option.selected { border-color: var(--gold); background: rgba(240,192,64,0.1); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 999px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    border-radius: 999px;
+    transition: width 0.4s ease;
+  }
+
+  /* ── COPY BUTTON ── */
+  .copy-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: 'Space Grotesk', sans-serif;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .copy-btn:hover { color: var(--gold); border-color: var(--gold); }
+
+  /* ── SEPARATOR ── */
+  .sep { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--border); font-size: 0.75rem; }
+  .sep::before, .sep::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* ── HINT TIMER ── */
+  .timer-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .timer-fill {
+    height: 100%;
+    background: var(--gold);
+    border-radius: 999px;
+    transition: width 1s linear, background 1s;
+  }
+
+  .clue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .clue-counter {
+    font-size: 0.78rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 4px 10px;
+  }
+
+  /* ── FINAL SCREEN ── */
+  .trophy {
+    font-size: 5rem;
+    display: block;
+    text-align: center;
+    margin: 16px 0 8px;
+    animation: wiggle 0.6s ease 0.3s both;
+  }
+  @keyframes wiggle {
+    0%,100% { transform: rotate(0deg); }
+    25% { transform: rotate(-12deg); }
+    75% { transform: rotate(12deg); }
+  }
+  .winner-name {
+    font-family: 'Fraunces', serif;
+    font-size: 2.2rem;
+    text-align: center;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .winner-sub { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 24px; }
+
+  /* ── CONFETTI ── */
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    opacity: 0;
+    animation: confettiFall 3s ease-in forwards;
+    pointer-events: none;
+    z-index: 100;
+    border-radius: 2px;
+  }
+  @keyframes confettiFall {
+    0% { opacity: 1; transform: translateY(-20px) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+  }
+
+  @media (max-width: 400px) {
+    .answer-input-row { flex-direction: column; }
+    .answer-input-row input { margin-bottom: 10px; }
+    .score-num { font-size: 2.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="logo-emoji">🥊🌻🐕</span>
+    <h1>Deep vs ❤️<br>La Sfida degli Indizi</h1>
+    <p class="subtitle">indovina prima · vinci il round · fai fare la penitenza</p>
+  </header>
+
+  <!-- ═══════════════════════════════ SCREEN: HOME ═══ -->
+  <div id="screen-home" class="screen active">
+    <div class="card">
+      <div class="card-title">Come si gioca</div>
+      <p style="font-size:0.9rem;line-height:1.6;color:var(--muted)">
+        5 round, 5 indizi per round — rivelati uno alla volta.<br>
+        Chi risponde prima (e giusto) vince il round.<br>
+        Più indizi usi, meno punti guadagni.<br>
+        <strong style="color:var(--text)">Chi perde il gioco deve fare la penitenza scelta dal vincitore.</strong>
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Il tuo nome</div>
+      <input type="text" id="home-name" placeholder="Come ti chiami?" maxlength="20">
+
+      <div class="card-title" style="margin-top:4px">Codice stanza</div>
+      <div class="alert" id="home-alert"></div>
+      <input type="text" id="home-room" placeholder="Es: DOGS42" maxlength="8" style="text-transform:uppercase;letter-spacing:0.1em;font-size:1.1rem">
+      <div style="display:flex;gap:10px;margin-top:4px">
+        <button class="btn btn-gold" style="flex:1" onclick="joinRoom()">Entra in stanza</button>
+        <button class="btn btn-outline" onclick="createRoom()">Crea stanza</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SCREEN: LOBBY ═══ -->
+  <div id="screen-lobby" class="screen">
+    <div class="card" style="text-align:center">
+      <div class="role-badge" id="lobby-role-badge" style="margin:0 auto 20px">
+        <span class="dot"></span> <span id="lobby-role-text">Host</span>
+      </div>
+      <div class="card-title">Codice stanza — mandalo all'altro</div>
+      <div class="code-display">
+        <div class="code-big" id="lobby-code">----</div>
+        <div class="code-hint">Toccalo per copiare</div>
+      </div>
+      <button class="copy-btn" id="lobby-copy-btn" onclick="copyCode()">📋 Copia codice</button>
+
+      <div class="sep">stato</div>
+
+      <div id="lobby-status" class="waiting">
+        <div class="pulse-ring"></div>
+        <div style="font-size:0.9rem">In attesa dell'altro giocatore…</div>
+      </div>
+
+      <div id="lobby-both-ready" style="display:none">
+        <div style="color:var(--green);font-size:0.9rem;margin-bottom:16px">✓ Entrambi connessi!</div>
+        <button class="btn btn-gold btn-full" id="lobby-start-btn" onclick="hostStartGame()" style="display:none">Inizia il gioco 🎯</button>
+        <div id="lobby-wait-start" style="color:var(--muted);font-size:0.85rem">L'host inizia il gioco…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SCREEN: GAME ═══ -->
+  <div id="screen-game" class="screen">
+    <!-- Scoreboard -->
+    <div class="scoreboard">
+      <div class="score-player">
+        <div class="score-name" id="score-name-me">Tu</div>
+        <div class="score-num" id="score-me">0</div>
+      </div>
+      <div class="score-vs">VS</div>
+      <div class="score-player">
+        <div class="score-name" id="score-name-opp">Avversario</div>
+        <div class="score-num" id="score-opp">0</div>
+      </div>
+    </div>
+
+    <!-- Round dots -->
+    <div class="round-dots" id="round-dots"></div>
+
+    <!-- Progress -->
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+    </div>
+
+    <!-- Theme badge -->
+    <div id="theme-badge" class="theme-badge theme-mix">🎯 Round in corso</div>
+
+    <!-- Clues -->
+    <div class="clue-reveal" id="clue-list"></div>
+
+    <!-- Timer bar (host only) -->
+    <div class="timer-bar" id="timer-bar" style="display:none">
+      <div class="timer-fill" id="timer-fill" style="width:100%"></div>
+    </div>
+
+    <!-- Reveal next clue (host controls) -->
+    <div id="host-controls" style="display:none;margin-bottom:12px">
+      <button class="btn btn-outline btn-full" id="btn-next-clue" onclick="revealNextClue()">Mostra prossimo indizio 🔍</button>
+    </div>
+
+    <!-- Answer zone -->
+    <div class="answer-zone" id="answer-zone">
+      <div class="card-title">La tua risposta</div>
+      <div class="answer-input-row">
+        <input type="text" id="answer-input" placeholder="Scrivi qui la risposta…" maxlength="60" onkeydown="if(event.key==='Enter')submitAnswer()">
+        <button class="btn btn-gold" id="btn-answer" onclick="submitAnswer()">Rispondo!</button>
+      </div>
+      <div id="answer-feedback" style="font-size:0.82rem;color:var(--muted);margin-top:6px"></div>
+    </div>
+
+    <!-- Round result -->
+    <div id="round-result" style="display:none"></div>
+
+    <!-- Next round button (host) -->
+    <div id="host-next-round" style="display:none;margin-top:12px">
+      <button class="btn btn-gold btn-full" onclick="hostNextRound()">Prossimo round ▶</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SCREEN: FINAL ═══ -->
+  <div id="screen-final" class="screen">
+    <span class="trophy" id="final-trophy">🏆</span>
+    <div class="winner-name" id="final-winner">---</div>
+    <div class="winner-sub" id="final-sub"></div>
+
+    <!-- Score riepilogo -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Risultato finale</div>
+      <div class="scoreboard" style="margin-bottom:0">
+        <div class="score-player">
+          <div class="score-name" id="final-name-me"></div>
+          <div class="score-num" id="final-score-me" style="font-size:2.4rem"></div>
+        </div>
+        <div class="score-vs">—</div>
+        <div class="score-player">
+          <div class="score-name" id="final-name-opp"></div>
+          <div class="score-num" id="final-score-opp" style="font-size:2.4rem"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Penitenza (solo se sei il vincitore) -->
+    <div id="forfeit-section" style="display:none">
+      <div class="card-title" style="margin-bottom:12px">Scegli la penitenza per il perdente 😈</div>
+      <div id="penitenza-list"></div>
+      <button class="btn btn-red btn-full" style="margin-top:8px" onclick="sendPenitenza()" id="btn-send-penitenza">Imponi la penitenza 🎯</button>
+    </div>
+
+    <!-- Penitenza (perdente) -->
+    <div id="forfeit-box-loser" style="display:none">
+      <div class="forfeit-box" id="loser-forfeit-content">
+        <div class="pulse-ring"></div>
+        <div style="color:var(--muted);font-size:0.9rem;margin-top:12px">In attesa della tua penitenza…</div>
+      </div>
+    </div>
+
+    <button class="btn btn-outline btn-full" style="margin-top:20px" onclick="restartGame()">Rivincita 🔄</button>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STORAGE-BASED MULTIPLAYER (via localStorage polling)
+//  Works on same-network / same-device only, OR via
+//  a shared tiny JSON on GitHub Gist (we use localStorage
+//  with BroadcastChannel for same-device demo,
+//  but the real magic: we encode state in the URL hash
+//  so two people on different phones/PCs can play via
+//  a shared room code + localStorage sync polled)
+//
+//  ARCHITECTURE: We use a lightweight sync via
+//  window.storage (localStorage) keyed by room code.
+//  Two browsers on different devices won't share
+//  localStorage — so we use a free public key-value
+//  trick: encode messages as URL fragments and relay
+//  via a polling mechanism on a shared key stored in
+//  sessionStorage. For TRUE cross-device play we use
+//  the Anthropic API as a relay: we call it to store
+//  state (embedded in a long-running "game session"
+//  prompt) — but actually the cleanest GitHub Pages
+//  approach is: use a free JSONBin.io or similar.
+//
+//  For THIS build: we use localStorage + BroadcastChannel
+//  (works perfectly for same-device / same-browser
+//  split-screen, which IS the fun way), PLUS a URL-share
+//  mechanism that encodes the room in the hash so the
+//  other player can join. State sync across devices
+//  uses a tiny public API relay (jsonblob.com).
+// ═══════════════════════════════════════════════════════
+
+const RELAY = 'https://jsonblob.com/api/jsonBlob';
+
+// ── GAME STATE ────────────────────────────────────────
+let myName = '';
+let roomCode = '';
+let isHost = false;
+let blobId = null; // jsonblob ID for this room
+let pollInterval = null;
+let gameState = null; // mirrored from server
+let myScore = 0;
+let oppScore = 0;
+let currentRound = 0;
+let totalRounds = 5;
+let currentClueIndex = 0;
+let hasAnswered = false;
+let rounds = []; // [{theme, emoji, answer, clues:[5]}]
+let timerInterval = null;
+let selectedPenitenza = null;
+let oppName = '';
+
+// ── PENITENZE ─────────────────────────────────────────
+const PENITENZE = [
+  "🎤 Devi mandarmi un vocale in cui canti «Bella Ciao» integralmente",
+  "🐶 Devi mandarmi una foto che imiti la faccia di un bassotto",
+  "📸 Devi mandarmi una storia Instagram con la scritta «ho perso da [nome vincitore]»",
+  "🥊 Devi fare 20 squat in diretta video e contarli ad alta voce",
+  "☕ La prossima volta che ci vediamo paghi tu il caffè E la brioche",
+  "🌻 Devi mandarmi un selfie con un fiore (anche finto) tra i capelli",
+  "🎲 Devi scegliere la prossima uscita insieme senza protestare",
+  "😤 Devi mandarmi un messaggio che inizia con «Sei il/la migliore e hai ragione»",
+  "🎬 Devi guardarti un film a mia scelta senza lamentarti",
+  "📞 Devi farmi una telefonata di 5 minuti parlando SOLO in rima",
+];
+
+// ── ROUND DATA (built-in, no AI needed) ──────────────
+const ROUND_POOL = [
+  {
+    theme: 'bassotti', label: 'Bassotti', emoji: '🐶', themeClass: 'theme-dachshund',
+    answer: 'bassotto',
+    clues: [
+      "Sono un animale domestico famoso per il suo corpo lunghissimo e le zampe cortissime.",
+      "La razza nacque in Germania per cacciare i tassi nelle tane sotterranee — il nome significa quasi «cane tasso».",
+      "Le sue orecchie cadono morbide ai lati della testa e il muso è allungato.",
+      "Esiste in tre varietà di pelo: liscio, duro e lungo. Esiste anche in versione «nano».",
+      "È uno dei cani più fotografati sui social, spesso nei miei momenti più teneri e goffi mentre corre."
+    ]
+  },
+  {
+    theme: 'girasoli', label: 'Girasoli', emoji: '🌻', themeClass: 'theme-sunflower',
+    answer: 'girasole',
+    clues: [
+      "Sono una pianta con un fiore grandissimo, originaria delle Americhe.",
+      "Il mio nome deriva dal fatto che da giovane ruoto la testa durante il giorno, seguendo il sole.",
+      "Il mio stelo può raggiungere anche 3 metri di altezza.",
+      "I miei semi sono commestibili e si usa il mio olio in cucina.",
+      "Ho un grande disco centrale scuro circondato da petali giallo brillante. Van Gogh mi dipinse in una serie famosa."
+    ]
+  },
+  {
+    theme: 'boxe', label: 'Boxe', emoji: '🥊', themeClass: 'theme-boxing',
+    answer: 'boxe',
+    clues: [
+      "Sono uno sport da combattimento praticato da due atleti su un ring.",
+      "Si usano guantoni imbottiti e si possono colpire solo sopra la cintura e di fronte.",
+      "I round durano 3 minuti con un minuto di pausa. Un arbitro controlla il combattimento.",
+      "Muhammad Ali, Mike Tyson e Rocky Marciano sono tra i più famosi campioni della mia storia.",
+      "Il jab, il cross, l'uppercut e il gancio sono i quattro colpi base. Schivare si chiama bob and weave."
+    ]
+  },
+  {
+    theme: 'mix', label: 'Cultura generale', emoji: '🎯', themeClass: 'theme-mix',
+    answer: 'pizza',
+    clues: [
+      "Sono un alimento tipico di un paese del Sud Europa, diventato famoso in tutto il mondo.",
+      "La mia forma classica è tonda e piatta, cotta in un forno molto caldo.",
+      "La versione più semplice si chiama margherita: pomodoro, mozzarella, basilico.",
+      "Napoli rivendica la mia invenzione e l'Unesco ha riconosciuto la mia arte come patrimonio immateriale.",
+      "Esisto anche in versione bianca, fritto, al trancio, teglia, e con migliaia di condimenti diversi."
+    ]
+  },
+  {
+    theme: 'mix', label: 'Cultura generale', emoji: '🎯', themeClass: 'theme-mix',
+    answer: 'espresso',
+    clues: [
+      "Sono una bevanda calda nera, consumata in tazzina piccola.",
+      "Mi prepara una macchina che fa passare acqua bollente sotto pressione attraverso del caffè macinato.",
+      "In Italia sono servito al banco del bar e si beve in piedi in pochi sorsi.",
+      "Il mio nome deriva dal fatto che vengo preparato «espresso» al momento, per una sola persona.",
+      "Posso diventare macchiato, corretto, lungo, ristretto, o la base di cappuccino e latte."
+    ]
+  },
+  {
+    theme: 'bassotti', label: 'Bassotti', emoji: '🐶', themeClass: 'theme-dachshund',
+    answer: 'coda',
+    clues: [
+      "Nei bassotti (e in molti altri cani) questa parte del corpo è spesso la prima a muoversi quando sono felici.",
+      "È attaccata alla base della colonna vertebrale e negli animali serve anche per comunicare stati d'umore.",
+      "Nei bassotti è lunga e sottile, sempre in movimento quando sono eccitati.",
+      "In alcuni paesi è ancora pratica tagliare questa parte ai cuccioli di certe razze, ma è controversa.",
+      "Nei gatti è più rigida e espressiva; nei bassotti è quasi sempre allegra e scodinzolante."
+    ]
+  },
+  {
+    theme: 'boxe', label: 'Boxe', emoji: '🥊', themeClass: 'theme-boxing',
+    answer: 'gancio',
+    clues: [
+      "Sono uno dei quattro colpi fondamentali della boxe.",
+      "Arrivo dal lato, con il braccio piegato a circa 90 gradi.",
+      "Si distinguo in due varianti: uno portato con il braccio sinistro e uno con il destro.",
+      "Spesso viene usato dopo il jab per sorprendere l'avversario con una traiettoria laterale.",
+      "In inglese mi chiamano «hook». È uno dei colpi più spettacolari da vedere nei KO."
+    ]
+  },
+  {
+    theme: 'girasoli', label: 'Girasoli', emoji: '🌻', themeClass: 'theme-sunflower',
+    answer: 'van gogh',
+    clues: [
+      "Sono un pittore olandese del XIX secolo, uno dei più famosi al mondo.",
+      "Ho vissuto in Francia per diversi anni e ho dipinto migliaia di quadri.",
+      "Soffrii di malattia mentale e in un momento di crisi mi tagliai un orecchio.",
+      "I miei quadri ora valgono decine di milioni di euro, ma da vivo vendetti quasi nulla.",
+      "Dipinsi una serie di quadri famosi con girasoli gialli su sfondo giallo — tra i più riprodotti nella storia dell'arte."
+    ]
+  },
+  {
+    theme: 'mix', label: 'Cultura generale', emoji: '🎯', themeClass: 'theme-mix',
+    answer: 'instagram',
+    clues: [
+      "Sono un'applicazione social nata nel 2010 e acquistata da Facebook (ora Meta) nel 2012.",
+      "La mia funzione principale originale era condividere foto quadrate con filtri.",
+      "Ho introdotto le «Storie» nel 2016, copiando una funzione da un'altra app.",
+      "I Reels, lanciati nel 2020, sono la mia risposta ai video brevi di un'altra piattaforma molto popolare.",
+      "Il mio logo è una macchina fotografica stilizzata e il mio nome unisce «instant camera» e «telegram»."
+    ]
+  },
+  {
+    theme: 'mix', label: 'Cultura generale', emoji: '🎯', themeClass: 'theme-mix',
+    answer: 'gelato',
+    clues: [
+      "Sono un dolce freddo e cremoso, consumato soprattutto d'estate.",
+      "L'Italia è famosa in tutto il mondo per la mia versione artigianale.",
+      "Vengo servito in coppetta o in cono, spesso decorato con panna.",
+      "Ho più latte e meno panna rispetto alla versione americana, e meno aria incorporata.",
+      "I gusti classici italiani includono pistacchio, nocciola, stracciatella, cioccolato e fior di latte."
+    ]
+  }
+];
+
+// ── UTILITY ───────────────────────────────────────────
+function randCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let r = '';
+  for(let i=0;i<6;i++) r += chars[Math.floor(Math.random()*chars.length)];
+  return r;
+}
+
+function showAlert(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(roomCode).then(() => {
+    const btn = document.getElementById('lobby-copy-btn');
+    btn.textContent = '✓ Copiato!';
+    setTimeout(() => btn.textContent = '📋 Copia codice', 1500);
+  });
+}
+
+// ── JSONBLOB RELAY ────────────────────────────────────
+async function createBlob(data) {
+  try {
+    const r = await fetch(RELAY, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const loc = r.headers.get('Location') || '';
+    return loc.split('/').pop();
+  } catch(e) { return null; }
+}
+
+async function readBlob(id) {
+  try {
+    const r = await fetch(`${RELAY}/${id}`);
+    if(!r.ok) return null;
+    return await r.json();
+  } catch(e) { return null; }
+}
+
+async function writeBlob(id, data) {
+  try {
+    await fetch(`${RELAY}/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+  } catch(e) {}
+}
+
+// ── ROOM INIT ─────────────────────────────────────────
+function getNameAndRoom() {
+  myName = document.getElementById('home-name').value.trim();
+  roomCode = document.getElementById('home-room').value.trim().toUpperCase();
+  if(!myName) { showAlert('home-alert','Inserisci il tuo nome!'); return false; }
+  if(!roomCode) { showAlert('home-alert','Inserisci un codice stanza!'); return false; }
+  return true;
+}
+
+async function createRoom() {
+  if(!getNameAndRoom()) return;
+  isHost = true;
+
+  // Build rounds
+  rounds = buildRounds();
+
+  const initState = {
+    host: myName,
+    guest: null,
+    status: 'lobby', // lobby | playing | round_result | final
+    round: 0,
+    clueIndex: 0,
+    scores: {},
+    roundWinner: null,
+    penitenza: null,
+    rounds: rounds,
+    lastAnswer: null,
+    ts: Date.now()
+  };
+  initState.scores[myName] = 0;
+
+  blobId = await createBlob(initState);
+  if(!blobId) {
+    // Fallback: localStorage only (same device)
+    blobId = 'LOCAL_' + roomCode;
+    localStorage.setItem('room_'+roomCode, JSON.stringify(initState));
+    localStorage.setItem('blobId_'+roomCode, blobId);
+  } else {
+    localStorage.setItem('blobId_'+roomCode, blobId);
+  }
+
+  gameState = initState;
+  showLobby();
+}
+
+async function joinRoom() {
+  if(!getNameAndRoom()) return;
+  isHost = false;
+
+  // Try to find blob
+  blobId = localStorage.getItem('blobId_'+roomCode);
+  if(!blobId) {
+    showAlert('home-alert', 'Stanza non trovata. Controlla il codice!');
+    return;
+  }
+
+  let state = blobId.startsWith('LOCAL_')
+    ? JSON.parse(localStorage.getItem('room_'+roomCode)||'null')
+    : await readBlob(blobId);
+
+  if(!state) { showAlert('home-alert','Stanza non trovata. Controlla il codice!'); return; }
+
+  state.guest = myName;
+  if(!state.scores) state.scores = {};
+  state.scores[myName] = 0;
+  state.ts = Date.now();
+
+  rounds = state.rounds;
+  oppName = state.host;
+
+  await saveState(state);
+  gameState = state;
+  showLobby();
+}
+
+async function saveState(state) {
+  state.ts = Date.now();
+  if(blobId && blobId.startsWith('LOCAL_')) {
+    localStorage.setItem('room_'+roomCode, JSON.stringify(state));
+  } else {
+    await writeBlob(blobId, state);
+  }
+  gameState = state;
+}
+
+// ── LOBBY ─────────────────────────────────────────────
+function showLobby() {
+  document.getElementById('lobby-code').textContent = roomCode;
+  document.getElementById('lobby-code').onclick = copyCode;
+  document.getElementById('lobby-role-text').textContent = isHost ? 'Host' : 'Ospite';
+  showScreen('lobby');
+  startPolling();
+}
+
+function startPolling() {
+  if(pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    let state = blobId && blobId.startsWith('LOCAL_')
+      ? JSON.parse(localStorage.getItem('room_'+roomCode)||'null')
+      : await readBlob(blobId);
+    if(!state) return;
+
+    // Don't re-process if same timestamp
+    if(gameState && state.ts === gameState.ts) return;
+    gameState = state;
+    rounds = state.rounds;
+
+    if(state.status === 'lobby') handleLobbyPoll(state);
+    else if(state.status === 'playing') handleGamePoll(state);
+    else if(state.status === 'round_result') handleRoundResultPoll(state);
+    else if(state.status === 'final') handleFinalPoll(state);
+  }, 1500);
+}
+
+function handleLobbyPoll(state) {
+  if(state.host && state.guest) {
+    oppName = isHost ? state.guest : state.host;
+    const readyDiv = document.getElementById('lobby-both-ready');
+    readyDiv.style.display = 'block';
+    document.getElementById('lobby-status').style.display = 'none';
+    if(isHost) {
+      document.getElementById('lobby-start-btn').style.display = 'flex';
+      document.getElementById('lobby-wait-start').style.display = 'none';
+    }
+  }
+}
+
+async function hostStartGame() {
+  let state = gameState;
+  state.status = 'playing';
+  state.round = 0;
+  state.clueIndex = 0;
+  state.roundWinner = null;
+  state.lastAnswer = null;
+  await saveState(state);
+}
+
+function handleGamePoll(state) {
+  if(document.getElementById('screen-game').classList.contains('active')) {
+    syncGameUI(state);
+  } else {
+    // Transition to game screen
+    currentRound = state.round;
+    currentClueIndex = state.clueIndex;
+    hasAnswered = false;
+    myScore = state.scores[myName] || 0;
+    oppScore = state.scores[oppName] || 0;
+    showScreen('game');
+    initGameUI();
+    syncGameUI(state);
+  }
+}
+
+// ── GAME INIT ─────────────────────────────────────────
+function buildRounds() {
+  // Pick 5 rounds: 1 bassotto, 1 girasole, 1 boxe, 2 mix
+  const bassotti = ROUND_POOL.filter(r=>r.theme==='bassotti');
+  const girasoli = ROUND_POOL.filter(r=>r.theme==='girasoli');
+  const boxe     = ROUND_POOL.filter(r=>r.theme==='boxe');
+  const mix      = ROUND_POOL.filter(r=>r.theme==='mix');
+
+  const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
+  const picked = [
+    pick(bassotti), pick(girasoli), pick(boxe),
+    pick(mix), pick(mix.filter(r=>r.answer!==pick(mix).answer)||mix)
+  ];
+  // Shuffle
+  for(let i=picked.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [picked[i],picked[j]]=[picked[j],picked[i]];
+  }
+  return picked;
+}
+
+function initGameUI() {
+  // Names
+  document.getElementById('score-name-me').textContent = myName;
+  document.getElementById('score-name-opp').textContent = oppName;
+  // Round dots
+  const dotsEl = document.getElementById('round-dots');
+  dotsEl.innerHTML = '';
+  for(let i=0;i<totalRounds;i++){
+    const d = document.createElement('div');
+    d.className = 'round-dot' + (i===currentRound?' current':'');
+    dotsEl.appendChild(d);
+  }
+  // Host controls
+  document.getElementById('host-controls').style.display = isHost ? 'block' : 'none';
+  document.getElementById('timer-bar').style.display = isHost ? 'block' : 'none';
+}
+
+function syncGameUI(state) {
+  currentRound = state.round;
+  currentClueIndex = state.clueIndex;
+  myScore = state.scores[myName] || 0;
+  oppScore = state.scores[oppName] || 0;
+
+  // Scores
+  document.getElementById('score-me').textContent = myScore;
+  document.getElementById('score-opp').textContent = oppScore;
+
+  // Progress
+  const pct = (currentRound / totalRounds) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Round dots
+  const dots = document.querySelectorAll('.round-dot');
+  dots.forEach((d, i) => {
+    d.className = 'round-dot';
+    if(i < currentRound) d.classList.add('done');
+    else if(i === currentRound) d.classList.add('current');
+  });
+
+  // Theme badge
+  const round = rounds[currentRound];
+  if(round) {
+    const badge = document.getElementById('theme-badge');
+    badge.className = 'theme-badge ' + round.themeClass;
+    badge.innerHTML = round.emoji + ' ' + round.label;
+  }
+
+  // Clues
+  renderClues(state);
+
+  // Next clue button
+  const btnNext = document.getElementById('btn-next-clue');
+  if(btnNext) {
+    const atMax = currentClueIndex >= 4;
+    btnNext.disabled = atMax;
+    btnNext.textContent = atMax ? 'Tutti gli indizi mostrati' : `Mostra prossimo indizio 🔍`;
+  }
+
+  // Answer zone
+  const roundResult = document.getElementById('round-result');
+  const answerZone = document.getElementById('answer-zone');
+  const hostNext = document.getElementById('host-next-round');
+  roundResult.style.display = 'none';
+  answerZone.style.display = 'block';
+  hostNext.style.display = 'none';
+
+  if(state.status === 'round_result') {
+    handleRoundResultPoll(state);
+  }
+}
+
+function renderClues(state) {
+  const round = rounds[currentRound];
+  if(!round) return;
+  const list = document.getElementById('clue-list');
+  list.innerHTML = '';
+
+  for(let i=0;i<5;i++){
+    const item = document.createElement('div');
+    item.className = 'clue-item';
+    if(i <= state.clueIndex) item.className += ' visible';
+
+    const num = document.createElement('div');
+    num.className = 'clue-num';
+    num.textContent = i+1;
+
+    const txt = document.createElement('div');
+    txt.className = 'clue-text';
+    if(i <= state.clueIndex) {
+      txt.textContent = round.clues[i];
+    } else {
+      txt.innerHTML = '<span class="clue-locked">🔒 indizio non ancora rivelato</span>';
+    }
+
+    item.appendChild(num);
+    item.appendChild(txt);
+    list.appendChild(item);
+
+    // Trigger animation
+    if(i <= state.clueIndex) {
+      setTimeout(() => item.classList.add('visible'), i * 80);
+    }
+  }
+}
+
+// ── HOST ACTIONS ──────────────────────────────────────
+async function revealNextClue() {
+  if(!isHost) return;
+  let state = gameState;
+  if(state.clueIndex >= 4) return;
+  state.clueIndex++;
+  state.lastAnswer = null;
+  await saveState(state);
+}
+
+// ── ANSWER ────────────────────────────────────────────
+async function submitAnswer() {
+  if(hasAnswered) return;
+  const input = document.getElementById('answer-input');
+  const val = input.value.trim().toLowerCase();
+  if(!val) return;
+
+  const round = rounds[currentRound];
+  const correct = checkAnswer(val, round.answer.toLowerCase());
+
+  hasAnswered = true;
+  document.getElementById('btn-answer').disabled = true;
+  input.disabled = true;
+
+  const cluesUsed = gameState.clueIndex + 1;
+  const points = correct ? Math.max(6 - cluesUsed, 1) : 0;
+
+  if(correct) {
+    document.getElementById('answer-feedback').innerHTML =
+      `<span style="color:var(--green)">✓ Corretto! +${points} punti con ${cluesUsed} indizi</span>`;
+
+    // Update state
+    let state = gameState;
+    if(!state.scores) state.scores = {};
+    state.scores[myName] = (state.scores[myName] || 0) + points;
+    state.roundWinner = myName;
+    state.winnerClues = cluesUsed;
+    state.winnerPoints = points;
+    state.status = 'round_result';
+    await saveState(state);
+  } else {
+    document.getElementById('answer-feedback').innerHTML =
+      `<span style="color:var(--red)">✗ Sbagliato, riprova…</span>`;
+    input.disabled = false;
+    input.value = '';
+    hasAnswered = false;
+    document.getElementById('btn-answer').disabled = false;
+  }
+}
+
+function checkAnswer(input, correct) {
+  // Normalize
+  const norm = s => s.toLowerCase().trim()
+    .replace(/[àá]/g,'a').replace(/[èé]/g,'e')
+    .replace(/[ìí]/g,'i').replace(/[òó]/g,'o')
+    .replace(/[ùú]/g,'u');
+  const ni = norm(input);
+  const nc = norm(correct);
+  if(ni === nc) return true;
+  // Contains
+  if(ni.includes(nc) || nc.includes(ni)) return true;
+  // Levenshtein for small words
+  if(nc.length <= 6) return ni === nc;
+  return levenshtein(ni, nc) <= 2;
+}
+
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1}, (_,i) => Array.from({length:n+1},(_,j) => i===0?j:j===0?i:0));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+// ── ROUND RESULT ──────────────────────────────────────
+function handleRoundResultPoll(state) {
+  if(!document.getElementById('screen-game').classList.contains('active')) return;
+
+  const roundResult = document.getElementById('round-result');
+  const answerZone = document.getElementById('answer-zone');
+  const hostNext = document.getElementById('host-next-round');
+
+  answerZone.style.display = 'none';
+  roundResult.style.display = 'block';
+
+  myScore = state.scores[myName] || 0;
+  oppScore = state.scores[oppName] || 0;
+  document.getElementById('score-me').textContent = myScore;
+  document.getElementById('score-opp').textContent = oppScore;
+
+  const iWon = state.roundWinner === myName;
+  const winner = state.roundWinner;
+  const pts = state.winnerPoints || 0;
+  const cluesUsed = state.winnerClues || 1;
+  const round = rounds[currentRound];
+  const correctAnswer = round ? round.answer : '?';
+
+  let html = '';
+  if(iWon) {
+    html = `<div class="result-flash win">
+      <div class="big">🎉</div>
+      <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--green);margin-bottom:4px">Hai vinto questo round!</div>
+      <div class="sub">Con ${cluesUsed} indizi — +${pts} punti</div>
+    </div>`;
+  } else if(winner) {
+    html = `<div class="result-flash lose">
+      <div class="big">😤</div>
+      <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red);margin-bottom:4px">${winner} ha risposto prima!</div>
+      <div class="sub">La risposta era: <strong>${correctAnswer}</strong></div>
+    </div>`;
+  } else {
+    html = `<div class="result-flash draw">
+      <div class="big">⏱️</div>
+      <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--gold);margin-bottom:4px">Round terminato</div>
+      <div class="sub">La risposta era: <strong>${correctAnswer}</strong></div>
+    </div>`;
+  }
+  roundResult.innerHTML = html;
+
+  if(isHost) {
+    const isLast = currentRound >= totalRounds - 1;
+    hostNext.style.display = 'block';
+    hostNext.querySelector('button').textContent = isLast ? 'Vedi il risultato finale 🏆' : 'Prossimo round ▶';
+    hostNext.querySelector('button').onclick = isLast ? hostEndGame : hostNextRound;
+  }
+}
+
+async function hostNextRound() {
+  let state = gameState;
+  state.round++;
+  state.clueIndex = 0;
+  state.roundWinner = null;
+  state.winnerPoints = null;
+  state.winnerClues = null;
+  state.lastAnswer = null;
+  state.status = 'playing';
+  hasAnswered = false;
+  document.getElementById('answer-input').disabled = false;
+  document.getElementById('answer-input').value = '';
+  document.getElementById('btn-answer').disabled = false;
+  document.getElementById('answer-feedback').textContent = '';
+  await saveState(state);
+}
+
+async function hostEndGame() {
+  let state = gameState;
+  state.status = 'final';
+  await saveState(state);
+}
+
+function handleFinalPoll(state) {
+  clearInterval(pollInterval);
+  showFinal(state);
+}
+
+// ── FINAL ─────────────────────────────────────────────
+function showFinal(state) {
+  showScreen('final');
+  const ms = state.scores[myName] || 0;
+  const os = state.scores[oppName] || 0;
+
+  document.getElementById('final-name-me').textContent = myName;
+  document.getElementById('final-name-opp').textContent = oppName;
+  document.getElementById('final-score-me').textContent = ms;
+  document.getElementById('final-score-opp').textContent = os;
+
+  const iWon = ms > os;
+  const isDraw = ms === os;
+
+  if(isDraw) {
+    document.getElementById('final-trophy').textContent = '🤝';
+    document.getElementById('final-winner').textContent = 'Pari!';
+    document.getElementById('final-sub').textContent = 'Stessa forza, stessa testardaggine.';
+  } else if(iWon) {
+    document.getElementById('final-trophy').textContent = '🏆';
+    document.getElementById('final-winner').textContent = myName + ' vince!';
+    document.getElementById('final-sub').textContent = 'Puoi scegliere la penitenza 😈';
+    spawnConfetti();
+    // Show penitenza chooser
+    document.getElementById('forfeit-section').style.display = 'block';
+    const list = document.getElementById('penitenza-list');
+    list.innerHTML = '';
+    PENITENZE.forEach((p, i) => {
+      const d = document.createElement('div');
+      d.className = 'penitenza-option';
+      d.textContent = p;
+      d.onclick = () => {
+        document.querySelectorAll('.penitenza-option').forEach(x=>x.classList.remove('selected'));
+        d.classList.add('selected');
+        selectedPenitenza = p;
+      };
+      list.appendChild(d);
+    });
+  } else {
+    document.getElementById('final-trophy').textContent = '😅';
+    document.getElementById('final-winner').textContent = oppName + ' vince!';
+    document.getElementById('final-sub').textContent = 'Toccherà fare la penitenza…';
+    document.getElementById('forfeit-box-loser').style.display = 'block';
+    pollForPenitenza();
+  }
+}
+
+async function sendPenitenza() {
+  if(!selectedPenitenza) { alert('Scegli prima una penitenza!'); return; }
+  let state = gameState;
+  state.penitenza = selectedPenitenza;
+  await saveState(state);
+  document.getElementById('btn-send-penitenza').disabled = true;
+  document.getElementById('btn-send-penitenza').textContent = '✓ Penitenza inviata!';
+}
+
+function pollForPenitenza() {
+  const pInterval = setInterval(async () => {
+    let state = blobId && blobId.startsWith('LOCAL_')
+      ? JSON.parse(localStorage.getItem('room_'+roomCode)||'null')
+      : await readBlob(blobId);
+    if(state && state.penitenza) {
+      clearInterval(pInterval);
+      const box = document.getElementById('loser-forfeit-content');
+      box.innerHTML = `
+        <span class="forfeit-emoji">😬</span>
+        <div class="forfeit-title">La tua penitenza</div>
+        <div class="forfeit-text">${state.penitenza}</div>
+      `;
+    }
+  }, 2000);
+}
+
+async function restartGame() {
+  clearInterval(pollInterval);
+  // Reset blob
+  const newRounds = buildRounds();
+  let state = {
+    host: isHost ? myName : gameState.host,
+    guest: isHost ? gameState.guest : myName,
+    status: 'lobby',
+    round: 0,
+    clueIndex: 0,
+    scores: {},
+    roundWinner: null,
+    penitenza: null,
+    rounds: newRounds,
+    lastAnswer: null,
+    ts: Date.now()
+  };
+  state.scores[myName] = 0;
+  if(oppName) state.scores[oppName] = 0;
+  hasAnswered = false;
+  myScore = 0;
+  oppScore = 0;
+  rounds = newRounds;
+  await saveState(state);
+  gameState = state;
+  showLobby();
+}
+
+// ── CONFETTI ──────────────────────────────────────────
+function spawnConfetti() {
+  const colors = ['#f0c040','#3ddc97','#5b9cf6','#e84040','#f5c518','#fff'];
+  for(let i=0;i<60;i++){
+    setTimeout(() => {
+      const el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.cssText = `
+        left:${Math.random()*100}vw;
+        top:-20px;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        width:${6+Math.random()*8}px;
+        height:${6+Math.random()*8}px;
+        border-radius:${Math.random()>0.5?'50%':'2px'};
+        animation-delay:${Math.random()*1.5}s;
+        animation-duration:${2.5+Math.random()*1.5}s;
+      `;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 4500);
+    }, i * 40);
+  }
+}
+
+// ── CHECK URL HASH FOR ROOM CODE ──────────────────────
+(function checkHash() {
+  const hash = location.hash.replace('#','');
+  if(hash && hash.length >= 4) {
+    document.getElementById('home-room').value = hash.toUpperCase();
+  }
+})();
+</script>
+</body>
+</html>
